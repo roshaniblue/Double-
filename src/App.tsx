@@ -3,7 +3,7 @@ import { Files, Folder, Trash2, Chrome, Terminal as TerminalIcon, Search, X, Che
 import { hints, postsA, postsB, facebookPosts, xPosts, mailboxes, type Post } from './data'
 import Terminal from './Terminal'
 
-const DEMO_FLAG='owasp{ lisa.morrow@northstar-lab.test}'
+const DEMO_FLAG='flag{lisa123-21:30}'
 type Page='instagram'|'facebook'|'x'|'gmail'|'submit'|'search'
 type Profile='a'|'b'
 
@@ -18,11 +18,11 @@ export default function App(){
  const [post,setPost]=useState<Post|null>(null)
  const [hintOpen,setHintOpen]=useState(false); const [hintIndex,setHintIndex]=useState(0)
  const [query,setQuery]=useState(''); const [address,setAddress]=useState('https://instagram.local/@lisa.morrow'); const [newTab,setNewTab]=useState(false)
- const [flag,setFlag]=useState(''); const [submitted,setSubmitted]=useState(false)
+ const [flag,setFlag]=useState(''); const [submitted,setSubmitted]=useState(false); const [wrongFlag,setWrongFlag]=useState(false)
  const [mailTo,setMailTo]=useState(''); const [mailSubject,setMailSubject]=useState('Profile verification'); const [mailBody,setMailBody]=useState('Please confirm this account is yours.'); const [mailResult,setMailResult]=useState<string|null>(null)
  const openBrowser=(p:Page='instagram')=>{setBrowser({min:false,max:false});setPage(p);setPost(null);setNewTab(false);setAddress(p==='submit'?'submit://the-double':`https://${p}.local`) }
  const closeHint=()=>{setHintOpen(false);if(hintIndex<hints.length-1)setHintIndex(i=>i+1)}
- const submit=()=>setSubmitted(flag.trim()===DEMO_FLAG)
+ const submit=()=>{const correct=flag.trim()===DEMO_FLAG; setSubmitted(correct); setWrongFlag(!correct)}
  const sendMail=()=>{const box=mailboxes[mailTo.trim() as keyof typeof mailboxes]; setMailResult(box?box.body:'Delivery Status Notification\n\nAddress not found\n\nThe fictional mail system has no mailbox at this address.')}
  const navAddress=(value:string)=>{
    const v=value.trim(); setAddress(v)
@@ -58,7 +58,7 @@ export default function App(){
    {hintOpen && <div className="hint-modal"><div className="hint-sheet"><div className="sheet-head"><FileText size={18}/> HINT.txt <button onClick={closeHint}><X size={16}/></button></div><pre>{hints[hintIndex]}</pre><div className="sheet-footer">Hint {hintIndex+1} / {hints.length} · reopening advances and discards the previous hint</div>{hintIndex===hints.length-1&&<button className="link-button" onClick={()=>openBrowser('submit')}><ExternalLink size={15}/> open submit://the-double</button>}</div></div>}
 
    {terminal.min===false && <Window title="Terminal — byte@lab" icon={<TerminalIcon/>} state={terminal} setState={setTerminal} onClose={()=>setTerminal(s=>({...s,min:true}))} className="terminal-window"><Terminal onOpenBrowser={()=>openBrowser()}/></Window>}
-   {browser.min===false && <Browser state={browser} setState={setBrowser} onClose={()=>setBrowser(s=>({...s,min:true}))} page={page} setPage={setPage} profile={profile} setProfile={setProfile} post={post} setPost={setPost} address={address} navAddress={navAddress} query={query} setQuery={setQuery} flag={flag} setFlag={setFlag} submitted={submitted} submit={submit} mailTo={mailTo} setMailTo={setMailTo} mailSubject={mailSubject} setMailSubject={setMailSubject} mailBody={mailBody} setMailBody={setMailBody} mailResult={mailResult} sendMail={sendMail} newTab={newTab} setNewTab={setNewTab}/>} 
+   {browser.min===false && <Browser state={browser} setState={setBrowser} onClose={()=>setBrowser(s=>({...s,min:true}))} page={page} setPage={setPage} profile={profile} setProfile={setProfile} post={post} setPost={setPost} address={address} navAddress={navAddress} query={query} setQuery={setQuery} flag={flag} setFlag={setFlag} submitted={submitted} wrongFlag={wrongFlag} submit={submit} mailTo={mailTo} setMailTo={setMailTo} mailSubject={mailSubject} setMailSubject={setMailSubject} mailBody={mailBody} setMailBody={setMailBody} mailResult={mailResult} sendMail={sendMail} newTab={newTab} setNewTab={setNewTab}/>} 
  </div>
 }
 
@@ -72,7 +72,7 @@ function Window({title,icon,state,setState,onClose,children,className=''}:{title
 }
 
 function Browser(p:any){
- const {state,setState,onClose,page,setPage,profile,setProfile,post,setPost,address,navAddress,query,setQuery,flag,setFlag,submitted,submit,mailTo,setMailTo,mailSubject,setMailSubject,mailBody,setMailBody,mailResult,sendMail,newTab,setNewTab}=p
+ const {state,setState,onClose,page,setPage,profile,setProfile,post,setPost,address,navAddress,query,setQuery,flag,setFlag,submitted,wrongFlag,submit,mailTo,setMailTo,mailSubject,setMailSubject,mailBody,setMailBody,mailResult,sendMail,newTab,setNewTab}=p
  const nav=(x:Page)=>{setPage(x);setPost(null);setState({...state,min:false});setQuery('');setAddress(x==='submit'?'submit://the-double':x==='gmail'?'https://mail.google.local':`https://${x}.local`)}
  const closeTab=(x:Page)=>{if(x==='gmail'){setPage('search');setQuery('');setAddress('');return} if(x==='submit'){setPage('instagram');setAddress('https://instagram.local/@lisa.morrow');return} if(x==='instagram'){setPage('facebook');setAddress('https://facebook.local');return} if(x==='facebook'){setPage('x');setAddress('https://x.local');return} if(x==='x'){setPage('instagram');setAddress('https://instagram.local/@lisa.morrow');return}}
  const tabs:[Page,string,React.ReactNode][]=[['instagram','Instagram',<Instagram size={13}/>],['facebook','Facebook',<Facebook size={13}/>],['x','X',<Twitter size={13}/>],...(page==='gmail'?[['gmail','Gmail',<Mail size={13}/>] as [Page,string,React.ReactNode]]:[]),['submit','Submit',<Flag size={13}/>]]
@@ -86,23 +86,144 @@ function Browser(p:any){
     {page==='x'&&<XPage/>}
     {page==='gmail'&&<GmailPage mailTo={mailTo} setMailTo={setMailTo} mailSubject={mailSubject} setMailSubject={setMailSubject} mailBody={mailBody} setMailBody={setMailBody} mailResult={mailResult} sendMail={sendMail} newTab={newTab} setNewTab={setNewTab}/>} 
     {page==='search'&&<SearchPage query={query} onSearch={navAddress}/>} 
-    {page==='submit'&&<SubmitPage flag={flag} setFlag={setFlag} submit={submit} submitted={submitted}/>} 
+    {page==='submit'&&<SubmitPage flag={flag} setFlag={setFlag} submit={submit} submitted={submitted} wrongFlag={wrongFlag}/>} 
    </div>
  </div>
 }
 
-function SocialHeader({handle,profile,onSwitch,email}:{handle:string,profile:Profile,onSwitch:()=>void,email:string}){return <div className="profile-head"><div className="avatar">LM</div><div className="profile-info"><h2>Lisa Morrow</h2><p>@{handle}</p><span>books · coffee · late walks · {email}</span></div><button className="switch-profile" onClick={onSwitch}>view other profile ↔</button></div>}
+function SocialHeader({handle,profile,onSwitch,email}:{handle:string,profile:Profile,onSwitch:()=>void,email:string}){return <div className="profile-head"><div className="avatar"><img src="/evidence/posts/pfp.jpg" alt="Lisa profile"/></div><div className="profile-info"><h2>Lisa Morrow</h2><p>@{handle}</p><span>books · coffee · late walks · {email}</span></div><button className="switch-profile" onClick={onSwitch}>view other profile ↔</button></div>}
 function InstagramPage({profile,setProfile,post,setPost}:{profile:Profile,setProfile:(x:Profile)=>void,post:Post|null,setPost:(x:Post|null)=>void}){
  const isA=profile==='a'; const posts=isA?postsA:postsB; const handle=isA?'lisa.morrow':'lisa.morrow_official'; const email=isA?'lisa.morrow@northstar-labs.test':'lisa.morrow@northstar-lab.test'
  return <div className="social-page instagram-page"><div className="social-nav"><b><Instagram size={19}/> instagram</b><div className="searchbox"><Search size={13}/> Search</div><span>⌂</span><span>♡</span><span>＋</span><span className="mini-avatar">LM</span></div><div className="profile-card"><SocialHeader handle={handle} profile={profile} onSwitch={()=>setProfile(isA?'b':'a')} email={email}/><div className="stats"><b>12</b> posts <b>1,842</b> followers <b>312</b> following</div><div className="story-row">{['LM','☕','B','✦','N'].map((x,i)=><div key={i}><span className="story">{x}</span><small>{['lisa','coffee','archive','notes','northstar'][i]}</small></div>)}</div></div><div className="compare-note"><AlertTriangle size={14}/> Both accounts intentionally share the same visible life. Grid order is not evidence of authorship.</div><div className="post-grid">{posts.map(p=><button key={p.id} className="post-tile" onClick={()=>setPost(p)}><PostArt type={p.image}/><div className="tile-time">{p.time}</div></button>)}</div>{post&&<PostModal post={post} onClose={()=>setPost(null)}/>}</div>
 }
-function PostArt({type}:{type:string}){const labels:Record<string,string>={window:'rain / window',cafe:'quiet corner',book:'same book',walk:'late walk',light:'sunday light',coffee:'coffee',blue:'blue afternoon',ticket:'ticket'};return <div className={'post-art art-'+type}><span>{labels[type]||type}</span></div>}
+function PostArt({type}:{type:string}){const files:Record<string,string>={window:'window.jpg',cafe:'cafe.jpg',book:'book.jpg',walk:'walk2.jpg',light:'Light.jpg',coffee:'coffee.jpg',blue:'blue.jpg',ticket:'ticket.jpg'};return <div className={'post-art art-'+type}>{files[type]?<img src={'/evidence/posts/'+files[type]} alt="fictional social post"/>:null}</div>}
 function PostModal({post,onClose}:{post:Post,onClose:()=>void}){return <div className="post-overlay"><div className="post-modal"><button className="close-modal" onClick={onClose}><X/></button><PostArt type={post.image}/><div className="post-details"><h3>{post.caption}</h3><p>{post.date} · {post.time}</p><p>{post.likes} likes</p><div className="ordinary-meta"><b>Public post</b><span>Comments: 17 · Shares: 4</span><span>Posted from Fictional Mobile</span></div></div></div></div>}
 
-function FacebookPage({profile,setProfile}:{profile:Profile,setProfile:(x:Profile)=>void}){const a=profile==='a';const handle=a?'lisa.morrow':'lisa.morrow_official';return <div className="facebook-page"><div className="fb-header"><b>facebook</b><div className="fb-search"><Search size={13}/> Search Facebook</div><div className="fb-head-icons">⌂　◉　🔔　LM</div></div><div className="fb-layout"><aside><div className="fb-side active">👤 {handle}</div><div className="fb-side">Friends</div><div className="fb-side">Groups</div><div className="fb-side">Saved</div></aside><main><div className="fb-profile-cover"></div><div className="fb-profile-main"><div className="fb-avatar-large">LM</div><div><h1>Lisa Morrow</h1><p>@{handle}</p><span>312 friends · 4 mutual</span></div><button onClick={()=>setProfile(a?'b':'a')}>View other profile</button></div><div className="fb-tabs"><b>Posts</b><span>About</span><span>Friends</span><span>Photos</span></div><div className="fb-two-col"><div>{facebookPosts.map((x,i)=><article className="fb-post" key={i}><div className="fb-post-head"><div className="fb-small-avatar">LM</div><div><b>Lisa Morrow</b><small>{x.date} · 🌐</small></div></div><p>{x.text}</p><div className="fb-image">{x.time}</div><div className="fb-actions">Like　 Comment　 Share</div></article>)}</div><aside className="fb-info"><h3>Intro</h3><p>books · coffee · late walks</p><p>Works at <b>Northstar Labs</b></p><p>Joined Mar 2019</p><hr/><h3>Contact info</h3><p>{a?'lisa.morrow@northstar-labs.test':'lisa.morrow@northstar-lab.test'}</p></aside></div></main></div></div>}
+function FacebookPage({profile,setProfile}:{profile:Profile,setProfile:(x:Profile)=>void}){
+ const a=profile==='a'
+ const handle=a?'lisa.morrow':'lisa.morrow_official'
+ return <div className="facebook-page">
+   <div className="fb-header">
+     <b>facebook</b>
+     <div className="fb-search"><Search size={13}/> Search Facebook</div>
+     <div className="fb-head-icons">⌂　◉　🔔　LM</div>
+   </div>
 
+   <div className="fb-layout">
+     <aside>
+       <div className="fb-side active">👤 {handle}</div>
+       <div className="fb-side">Friends</div>
+       <div className="fb-side">Groups</div>
+       <div className="fb-side">Saved</div>
+     </aside>
+
+     <main>
+       <div className="fb-profile-cover"></div>
+
+       <div className="fb-profile-main">
+         <div className="fb-avatar-large">
+           <img src="/evidence/posts/pfp.jpg" alt="Lisa profile"/>
+         </div>
+         <div>
+           <h1>Lisa Morrow</h1>
+           <p>@{handle}</p>
+           <span>312 friends · 4 mutual</span>
+         </div>
+         <button onClick={()=>setProfile(a?'b':'a')}>View other profile</button>
+       </div>
+
+       <div className="fb-tabs">
+         <b>Posts</b>
+         <span>About</span>
+         <span>Friends</span>
+         <span>Photos</span>
+       </div>
+
+       <div className="fb-two-col">
+         <div>
+           {facebookPosts.map((x,i)=>(
+             <article
+               className="fb-post"
+               key={i}
+               style={{
+                 background:'#fff',
+                 border:'1px solid #dddfe2',
+                 borderRadius:'8px',
+                 padding:'15px',
+                 marginBottom:'16px',
+                 overflow:'hidden',
+                 boxSizing:'border-box',
+               }}
+             >
+               <div className="fb-post-head">
+                 <div className="fb-small-avatar">LM</div>
+                 <div>
+                   <b>Lisa Morrow</b>
+                   <small>{x.date} · 🌐</small>
+                 </div>
+               </div>
+
+               <p>{x.text}</p>
+
+               <div
+                 className="fb-image"
+                 style={{
+                   width:'100%',
+                   height:'260px',
+                   minHeight:'260px',
+                   maxHeight:'260px',
+                   overflow:'hidden',
+                   position:'relative',
+                   display:'block',
+                   background:'#eee',
+                   margin:'0',
+                 }}
+               >
+                 <img
+                   src={`/evidence/posts/${x.image}`}
+                   alt={x.text}
+                   style={{
+                     display:'block',
+                     width:'100%',
+                     height:'100%',
+                     minWidth:'100%',
+                     minHeight:'100%',
+                     objectFit:'cover',
+                     objectPosition:'center',
+                   }}
+                 />
+               </div>
+
+               <div
+                 className="fb-actions"
+                 style={{
+                   marginTop:'10px',
+                   paddingTop:'10px',
+                   borderTop:'1px solid #eee',
+                 }}
+               >
+                 Like　 Comment　 Share
+               </div>
+             </article>
+           ))}
+         </div>
+
+         <aside className="fb-info">
+           <h3>Intro</h3>
+           <p>books · coffee · late walks</p>
+           <p>Works at <b>Northstar Labs</b></p>
+           <p>Joined Mar 2019</p>
+           <hr/>
+           <h3>Contact info</h3>
+           <p>{a?'lisa.morrow@northstar-labs.test':'lisa.morrow@northstar-lab.test'}</p>
+         </aside>
+       </div>
+     </main>
+   </div>
+ </div>
+}
 function XPage(){return <div className="x-page"><div className="x-top"><b>𝕏</b><div className="x-search"><Search size={13}/> Search</div><span>Home</span><span>Explore</span><span>Messages</span><span>Bookmarks</span></div><div className="x-feed"><div className="x-title">For you</div>{xPosts.map((p,i)=><article className="x-post" key={i}><div className="x-avatar">LM</div><div className="x-post-body"><div><b>Lisa Morrow</b> <span>{p.handle} · {p.date}</span></div><p>{p.text}</p><small>{p.time}　♡ 12　↻ 3　♡ 48</small></div></article>)}</div></div>}
 
 function GmailPage({mailTo,setMailTo,mailSubject,setMailSubject,mailBody,setMailBody,mailResult,sendMail}:{mailTo:string,setMailTo:(x:string)=>void,mailSubject:string,setMailSubject:(x:string)=>void,mailBody:string,setMailBody:(x:string)=>void,mailResult:string|null,sendMail:()=>void}){return <div className="gmail-page"><div className="gmail-top"><b><span className="gmail-m">M</span> Gmail</b><div className="gmail-search"><Search size={13}/> Search mail</div><span>⚙　?</span></div><div className="gmail-body"><aside className="gmail-side"><button className="compose" onClick={()=>{}}>＋ Compose</button><div className="mail-row active">Inbox <b>2</b></div><div className="mail-row">Sent</div><div className="mail-row">Drafts</div></aside><main className="compose-area"><h2>New Message</h2><label>To<input value={mailTo} onChange={e=>setMailTo(e.target.value)} placeholder="recipient@domain.test"/></label><label>Subject<input value={mailSubject} onChange={e=>setMailSubject(e.target.value)}/></label><textarea value={mailBody} onChange={e=>setMailBody(e.target.value)}/><button className="send-button" onClick={sendMail}><Send size={14}/> Send</button>{mailResult&&<div className="mail-result"><pre>{mailResult}</pre></div>}</main></div></div>}
 function SearchPage({query,onSearch}:{query:string,onSearch:(value:string)=>void}){const [term,setTerm]=useState(query);const q=query.toLowerCase();const usable=q.includes('lisa')||q.includes('morrow')||q.includes('northstar');return <div className="search-page"><form className="fake-google" onSubmit={e=>{e.preventDefault();onSearch(term)}}><b>BYTE Search</b><div className="google-box"><input name="site-search" aria-label="Search fictional web" autoFocus value={term} placeholder="Search the fictional web" onChange={e=>setTerm(e.target.value)} /><button type="submit" aria-label="Search"><Search size={15}/></button></div></form>{usable?<><div className="result"><b>Instagram — Lisa Morrow</b><span>@lisa.morrow · @lisa.morrow_official</span></div><div className="result"><b>Facebook — Lisa Morrow</b><span>Two fictional public profiles</span></div><div className="result"><b>X — Lisa Morrow</b><span>Multiple fictional posts</span></div></>:<div className="empty">No fictional source available for this search.</div>}</div>}
-function SubmitPage({flag,setFlag,submit,submitted}:{flag:string,setFlag:(x:string)=>void,submit:()=>void,submitted:boolean}){return <div className="submit-page"><div className="submit-card"><Flag size={30}/><p className="eyebrow">BYTE INVESTIGATION LAB · CHALLENGE 02</p><h1>THE DOUBLE</h1><p>Submit the flag recovered from the fictional evidence.</p><div className="submit-input"><input placeholder="flag{...}" value={flag} onChange={e=>setFlag(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submit()}/><button onClick={submit}>SUBMIT</button></div>{submitted&&<div className="win"><b>WOHOOO — YOU WON.</b><span>Correct. The duplicated digital life was a trap; the independent mailbox evidence broke it.</span></div>}<div className="tiny">Demo validation is local. Production: submit to CTFd server-side.</div></div></div>}
+function SubmitPage({flag,setFlag,submit,submitted,wrongFlag}:{flag:string,setFlag:(x:string)=>void,submit:()=>void,submitted:boolean,wrongFlag:boolean}){return <div className="submit-page"><div className="submit-card"><Flag size={30}/><p className="eyebrow">BYTE INVESTIGATION LAB · CHALLENGE 02</p><h1>THE DOUBLE</h1><p>Submit the flag recovered from the fictional evidence.</p><div className="submit-input"><input placeholder="owasp{...}" value={flag} onChange={e=>setFlag(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submit()}/><button onClick={submit}>SUBMIT</button></div>{submitted&&<div className="win"><b>WOHOOO — YOU WON.</b><span>Correct. The duplicated digital life was a trap; the independent mailbox evidence broke it.</span></div>}{wrongFlag&&<div className="wrong"><b>OOPS — TRY AGAIN.</b><span>That flag is not correct. Keep investigating the evidence.</span></div>}<div className="tiny">Demo validation is local. Production: submit to CTFd server-side.</div></div></div>}
