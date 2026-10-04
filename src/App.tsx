@@ -3,7 +3,7 @@ import { Files, Folder, Trash2, Chrome, Terminal as TerminalIcon, Search, X, Che
 import { hints, postsA, postsB, facebookPosts, xPosts, mailboxes, type Post } from './data'
 import Terminal from './Terminal'
 
-const DEMO_FLAG='flag{lisa123-21:30}'
+const DEMO_FLAG='owasp{lisa.morrow@northstar-lab.test}'
 type Page='instagram'|'facebook'|'x'|'gmail'|'submit'|'search'
 type Profile='a'|'b'
 
