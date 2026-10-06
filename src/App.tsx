@@ -84,7 +84,7 @@ const {state,setState,onClose,page,setPage,profile,setProfile,post,setPost,addre
     {page==='instagram'&&<InstagramPage profile={profile} setProfile={setProfile} post={post} setPost={setPost}/>} 
     {page==='facebook'&&<FacebookPage profile={profile} setProfile={setProfile}/>} 
     {page==='x'&&<XPage/>}
-    {page==='gmail'&&<GmailPage mailTo={mailTo} setMailTo={setMailTo} mailSubject={mailSubject} setMailSubject={setMailSubject} mailBody={mailBody} setMailBody={setMailBody} mailResult={mailResult} sendMail={sendMail} newTab={newTab} setNewTab={setNewTab}/>} 
+    {page==='gmail'&&<GmailPage mailTo={mailTo} setMailTo={setMailTo} mailSubject={mailSubject} setMailSubject={setMailSubject} mailBody={mailBody} setMailBody={setMailBody} mailResult={mailResult} sendMail={sendMail}/>}
     {page==='search'&&<SearchPage query={query} onSearch={navAddress}/>} 
     {page==='submit'&&<SubmitPage flag={flag} setFlag={setFlag} submit={submit} submitted={submitted} wrongFlag={wrongFlag}/>} 
    </div>
